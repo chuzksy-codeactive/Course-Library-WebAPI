@@ -1,10 +1,13 @@
 using System;
+
 using AutoMapper;
+
 using Library.API.DbContexts;
 using Library.API.Services;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,11 +27,11 @@ namespace Library.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services)
         {
-            services.AddControllers (setupAction => 
+            services.AddControllers (setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            }).AddXmlDataContractSerializerFormatters();
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            }).AddXmlDataContractSerializerFormatters ();
+            services.AddAutoMapper (AppDomain.CurrentDomain.GetAssemblies ());
 
             services.AddScoped<ILibraryRepository, LibraryRepository> ();
 
@@ -45,6 +48,17 @@ namespace Library.API
             if (env.IsDevelopment ())
             {
                 app.UseDeveloperExceptionPage ();
+            }
+            else
+            {
+                app.UseExceptionHandler (appBuilder =>
+                {
+                    appBuilder.Run (async context =>
+                    {
+                        context.Response.StatusCode = 500;
+                        await context.Response.WriteAsync ("An unexpected fault happened. Try again later.");
+                    });
+                });
             }
 
             app.UseHttpsRedirection ();
