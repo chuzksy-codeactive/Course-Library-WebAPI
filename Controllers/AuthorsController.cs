@@ -5,6 +5,7 @@ using AutoMapper;
 
 using Library.API.Helpser;
 using Library.API.Models;
+using Library.API.ResourceParameters;
 using Library.API.Services;
 
 using Microsoft.AspNetCore.Mvc;
@@ -27,9 +28,9 @@ namespace Library.API.Controllers
         }
 
         [HttpGet ()]
-        public ActionResult<IEnumerable<AuthorDto>> GetAuthors (string mainCategory, string searchQuery)
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors ([FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
-            var authorsFromRepo = _libraryRepository.GetAuthors (mainCategory, searchQuery);
+            var authorsFromRepo = _libraryRepository.GetAuthors (authorsResourceParameters);
 
             return Ok (_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo));
         }

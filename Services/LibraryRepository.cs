@@ -4,6 +4,7 @@ using System.Linq;
 
 using Library.API.DbContexts;
 using Library.API.Entities;
+using Library.API.ResourceParameters;
 
 namespace Library.API.Services
 {
@@ -123,24 +124,28 @@ namespace Library.API.Services
             return _context.Authors.ToList<Author> ();
         }
 
-        public IEnumerable<Author> GetAuthors (string mainCategory, string searchQuery)
+        public IEnumerable<Author> GetAuthors (AuthorsResourceParameters authorsResourceParameters)
         {
-            if (string.IsNullOrWhiteSpace (mainCategory) && string.IsNullOrWhiteSpace (searchQuery))
+            if (authorsResourceParameters == null)
+            {
+                throw new ArgumentException (nameof (authorsResourceParameters));
+            }
+            if (string.IsNullOrWhiteSpace (authorsResourceParameters.MainCategory) && string.IsNullOrWhiteSpace (authorsResourceParameters.SearchQuery))
             {
                 return GetAuthors ();
             }
 
             var collection = _context.Authors as IQueryable<Author>;
 
-            if (!string.IsNullOrWhiteSpace (mainCategory))
+            if (!string.IsNullOrWhiteSpace (authorsResourceParameters.MainCategory))
             {
-                mainCategory = mainCategory.Trim ();
+                var mainCategory = authorsResourceParameters.MainCategory.Trim ();
                 collection = collection.Where (a => a.MainCategory == mainCategory);
             }
 
-            if (!string.IsNullOrWhiteSpace (searchQuery))
+            if (!string.IsNullOrWhiteSpace (authorsResourceParameters.SearchQuery))
             {
-                searchQuery = searchQuery.Trim ();
+                var searchQuery = authorsResourceParameters.SearchQuery.Trim ();
                 collection = collection.Where (s => s.MainCategory.Contains (searchQuery) ||
                     s.FirstName.Contains (searchQuery) ||
                     s.LastName.Contains (searchQuery));
