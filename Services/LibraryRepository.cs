@@ -1,8 +1,9 @@
-﻿using Library.API.DbContexts;
-using Library.API.Entities; 
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using Library.API.DbContexts;
+using Library.API.Entities;
 
 namespace Library.API.Services
 {
@@ -10,152 +11,178 @@ namespace Library.API.Services
     {
         private readonly LibraryContext _context;
 
-        public LibraryRepository(LibraryContext context )
+        public LibraryRepository (LibraryContext context)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _context = context ??
+                throw new ArgumentNullException (nameof (context));
         }
 
-        public void AddCourse(Guid authorId, Course course)
+        public void AddCourse (Guid authorId, Course course)
         {
             if (authorId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(authorId));
+                throw new ArgumentNullException (nameof (authorId));
             }
 
             if (course == null)
             {
-                throw new ArgumentNullException(nameof(course));
+                throw new ArgumentNullException (nameof (course));
             }
             // always set the AuthorId to the passed-in authorId
             course.AuthorId = authorId;
-            _context.Courses.Add(course); 
-        }         
-
-        public void DeleteCourse(Course course)
-        {
-            _context.Courses.Remove(course);
+            _context.Courses.Add (course);
         }
-  
-        public Course GetCourse(Guid authorId, Guid courseId)
+
+        public void DeleteCourse (Course course)
+        {
+            _context.Courses.Remove (course);
+        }
+
+        public Course GetCourse (Guid authorId, Guid courseId)
         {
             if (authorId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(authorId));
+                throw new ArgumentNullException (nameof (authorId));
             }
 
             if (courseId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(courseId));
+                throw new ArgumentNullException (nameof (courseId));
             }
 
             return _context.Courses
-              .Where(c => c.AuthorId == authorId && c.Id == courseId).FirstOrDefault();
+                .Where (c => c.AuthorId == authorId && c.Id == courseId).FirstOrDefault ();
         }
 
-        public IEnumerable<Course> GetCourses(Guid authorId)
+        public IEnumerable<Course> GetCourses (Guid authorId)
         {
             if (authorId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(authorId));
+                throw new ArgumentNullException (nameof (authorId));
             }
 
             return _context.Courses
-                        .Where(c => c.AuthorId == authorId)
-                        .OrderBy(c => c.Title).ToList();
+                .Where (c => c.AuthorId == authorId)
+                .OrderBy (c => c.Title).ToList ();
         }
-
-        public void UpdateCourse(Course course)
+        public void UpdateCourse (Course course)
         {
             // no code in this implementation
         }
 
-        public void AddAuthor(Author author)
+        public void AddAuthor (Author author)
         {
             if (author == null)
             {
-                throw new ArgumentNullException(nameof(author));
+                throw new ArgumentNullException (nameof (author));
             }
 
             // the repository fills the id (instead of using identity columns)
-            author.Id = Guid.NewGuid();
+            author.Id = Guid.NewGuid ();
 
             foreach (var course in author.Courses)
             {
-                course.Id = Guid.NewGuid();
+                course.Id = Guid.NewGuid ();
             }
 
-            _context.Authors.Add(author);
+            _context.Authors.Add (author);
         }
 
-        public bool AuthorExists(Guid authorId)
+        public bool AuthorExists (Guid authorId)
         {
             if (authorId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(authorId));
+                throw new ArgumentNullException (nameof (authorId));
             }
 
-            return _context.Authors.Any(a => a.Id == authorId);
+            return _context.Authors.Any (a => a.Id == authorId);
         }
 
-        public void DeleteAuthor(Author author)
+        public void DeleteAuthor (Author author)
         {
             if (author == null)
             {
-                throw new ArgumentNullException(nameof(author));
+                throw new ArgumentNullException (nameof (author));
             }
 
-            _context.Authors.Remove(author);
+            _context.Authors.Remove (author);
         }
-        
-        public Author GetAuthor(Guid authorId)
+
+        public Author GetAuthor (Guid authorId)
         {
             if (authorId == Guid.Empty)
             {
-                throw new ArgumentNullException(nameof(authorId));
+                throw new ArgumentNullException (nameof (authorId));
             }
 
-            return _context.Authors.FirstOrDefault(a => a.Id == authorId);
+            return _context.Authors.FirstOrDefault (a => a.Id == authorId);
         }
 
-        public IEnumerable<Author> GetAuthors()
+        public IEnumerable<Author> GetAuthors ()
         {
-            return _context.Authors.ToList<Author>();
+            return _context.Authors.ToList<Author> ();
         }
-         
-        public IEnumerable<Author> GetAuthors(IEnumerable<Guid> authorIds)
+
+        public IEnumerable<Author> GetAuthors (string mainCategory, string searchQuery)
+        {
+            if (string.IsNullOrWhiteSpace (mainCategory) && string.IsNullOrWhiteSpace (searchQuery))
+            {
+                return GetAuthors ();
+            }
+
+            var collection = _context.Authors as IQueryable<Author>;
+
+            if (!string.IsNullOrWhiteSpace (mainCategory))
+            {
+                mainCategory = mainCategory.Trim ();
+                collection = collection.Where (a => a.MainCategory == mainCategory);
+            }
+
+            if (!string.IsNullOrWhiteSpace (searchQuery))
+            {
+                searchQuery = searchQuery.Trim ();
+                collection = collection.Where (s => s.MainCategory.Contains (searchQuery) ||
+                    s.FirstName.Contains (searchQuery) ||
+                    s.LastName.Contains (searchQuery));
+            }
+
+            return collection.ToList ();
+        }
+
+        public IEnumerable<Author> GetAuthors (IEnumerable<Guid> authorIds)
         {
             if (authorIds == null)
             {
-                throw new ArgumentNullException(nameof(authorIds));
+                throw new ArgumentNullException (nameof (authorIds));
             }
 
-            return _context.Authors.Where(a => authorIds.Contains(a.Id))
-                .OrderBy(a => a.FirstName)
-                .OrderBy(a => a.LastName)
-                .ToList();
+            return _context.Authors.Where (a => authorIds.Contains (a.Id))
+                .OrderBy (a => a.FirstName)
+                .OrderBy (a => a.LastName)
+                .ToList ();
         }
 
-        public void UpdateAuthor(Author author)
+        public void UpdateAuthor (Author author)
         {
             // no code in this implementation
         }
 
-        public bool Save()
+        public bool Save ()
         {
-            return (_context.SaveChanges() >= 0);
+            return (_context.SaveChanges () >= 0);
         }
 
-        public void Dispose()
+        public void Dispose ()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            Dispose (true);
+            GC.SuppressFinalize (this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        protected virtual void Dispose (bool disposing)
         {
             if (disposing)
             {
-               // dispose resources when needed
+                // dispose resources when needed
             }
         }
     }
