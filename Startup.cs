@@ -1,3 +1,5 @@
+using System;
+using AutoMapper;
 using Library.API.DbContexts;
 using Library.API.Services;
 
@@ -26,6 +28,7 @@ namespace Library.API
             {
                 setupAction.ReturnHttpNotAcceptable = true;
             }).AddXmlDataContractSerializerFormatters();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             services.AddScoped<ILibraryRepository, LibraryRepository> ();
 
