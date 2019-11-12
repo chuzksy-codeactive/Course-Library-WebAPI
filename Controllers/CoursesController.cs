@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using AutoMapper;
 
+using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
 
@@ -41,7 +42,7 @@ namespace Library.API.Controllers
             return Ok (_mapper.Map<IEnumerable<CourseDto>> (coursesForAuthorFromRepo));
         }
 
-        [HttpGet("{id}")]
+        [HttpGet ("{id}", Name = "GetCourseForAuthor")]
         public ActionResult<CourseDto> GetCourseForAuthor (Guid authorId, Guid id)
         {
             if (!_libraryRepository.AuthorExists (authorId))
@@ -56,7 +57,22 @@ namespace Library.API.Controllers
                 return NotFound ();
             }
 
-            return Ok (_mapper.Map<CourseDto>(courseForAuthorFromRepo))
+            return Ok (_mapper.Map<CourseDto> (courseForAuthorFromRepo));
+        }
+
+        [HttpPost]
+        public ActionResult<CourseDto> CreateCourseForAuthor (Guid authorId, CourseForCreationDto course)
+        {
+            if (!_libraryRepository.AuthorExists (authorId))
+            {
+                return NotFound ();
+            }
+            var courseEntity = _mapper.Map<Course> (course);
+            _libraryRepository.AddCourse (authorId, courseEntity);
+            _libraryRepository.Save ();
+
+            var courseToReturn = _mapper.Map<CourseDto> (courseEntity);
+            return CreatedAtRoute ("GetCourseForAuthor", new { authorId, id = courseToReturn.Id }, courseToReturn );
         }
     }
 }
