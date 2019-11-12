@@ -3,7 +3,8 @@ using System.Collections.Generic;
 
 using AutoMapper;
 
-using Library.API.Helpser;
+using Library.API.Entities;
+using Library.API.Helpers;
 using Library.API.Models;
 using Library.API.ResourceParameters;
 using Library.API.Services;
@@ -32,10 +33,10 @@ namespace Library.API.Controllers
         {
             var authorsFromRepo = _libraryRepository.GetAuthors (authorsResourceParameters);
 
-            return Ok (_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo));
+            return Ok (_mapper.Map<IEnumerable<AuthorDto>> (authorsFromRepo));
         }
 
-        [HttpGet ("{authorId}")]
+        [HttpGet ("{authorId}", Name = "GetAuthor")]
         public ActionResult<AuthorDto> GetAuthor (Guid authorId)
         {
             var authorFromRepo = _libraryRepository.GetAuthor (authorId);
@@ -45,7 +46,18 @@ namespace Library.API.Controllers
                 return NotFound ();
             }
 
-            return Ok (_mapper.Map<AuthorDto>(authorFromRepo));
+            return Ok (_mapper.Map<AuthorDto> (authorFromRepo));
+        }
+
+        [HttpPost]
+        public ActionResult<AuthorDto> CreateAuthor (AuthorForCreationDto authorForCreationDto)
+        {
+            var authorEntity = _mapper.Map<Author> (authorForCreationDto);
+            _libraryRepository.AddAuthor (authorEntity);
+            _libraryRepository.Save ();
+
+            var authorToReturn = _mapper.Map<AuthorDto> (authorEntity);
+            return CreatedAtRoute ("GetAuthor", new { authorId = authorToReturn.Id }, authorToReturn);
         }
     }
 }

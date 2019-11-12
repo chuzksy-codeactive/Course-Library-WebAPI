@@ -56,7 +56,7 @@ namespace Library.API.Controllers
                 return NotFound ();
             }
 
-            return Ok (_mapper.Map<CourseDto>(courseForAuthorFromRepo));
+            return Ok (_mapper.Map<CourseDto>(courseForAuthorFromRepo))
         }
     }
 }

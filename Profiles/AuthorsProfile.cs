@@ -1,7 +1,7 @@
 using AutoMapper;
 
 using Library.API.Entities;
-using Library.API.Helpser;
+using Library.API.Helpers;
 using Library.API.Models;
 
 namespace Library.API.Profiles
@@ -17,6 +17,7 @@ namespace Library.API.Profiles
                 .ForMember (
                     dest => dest.Age,
                     opt => opt.MapFrom (src => src.DateOfBirth.GetCurrentAge ()));
+            CreateMap<AuthorForCreationDto, Author>();
         }
     }
 }
