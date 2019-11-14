@@ -168,6 +168,27 @@ namespace Library.API.Controllers
             return NoContent ();
         }
 
+        [HttpDelete("{courseId}")]
+        public ActionResult DeleteCourseForAuthor(Guid authorId, Guid courseId)
+        {
+            if (!_libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var courseForAuthorFromRepo = _libraryRepository.GetCourse(authorId, courseId);
+
+            if (courseForAuthorFromRepo == null)
+            {
+                return NotFound();
+            }
+
+            _libraryRepository.DeleteCourse(courseForAuthorFromRepo);
+            _libraryRepository.Save();
+
+            return NoContent();
+        }
+
         public override ActionResult ValidationProblem (
             [ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
         {
