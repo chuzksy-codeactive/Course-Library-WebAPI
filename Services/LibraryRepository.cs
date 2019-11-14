@@ -130,10 +130,6 @@ namespace Library.API.Services
             {
                 throw new ArgumentException (nameof (authorsResourceParameters));
             }
-            if (string.IsNullOrWhiteSpace (authorsResourceParameters.MainCategory) && string.IsNullOrWhiteSpace (authorsResourceParameters.SearchQuery))
-            {
-                return GetAuthors ();
-            }
 
             var collection = _context.Authors as IQueryable<Author>;
 
@@ -151,7 +147,10 @@ namespace Library.API.Services
                     s.LastName.Contains (searchQuery));
             }
 
-            return collection.ToList ();
+            return collection
+                .Skip (authorsResourceParameters.PageSize * (authorsResourceParameters.PageNumber - 1))
+                .Take (authorsResourceParameters.PageSize)
+                .ToList ();
         }
 
         public IEnumerable<Author> GetAuthors (IEnumerable<Guid> authorIds)
