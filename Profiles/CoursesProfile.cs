@@ -12,9 +12,10 @@ namespace Library.API.Profiles
             // Used for GET actions
             CreateMap<Course, CourseDto> ();
 
-            // Used for POST,PUT actions
+            // Used for POST, PUT, PATCH actions respectively
             CreateMap<CourseForCreationDto, Course> ();
             CreateMap<CourseForUpdateDto, Course> ();
+            CreateMap<Course, CourseForUpdateDto> ();
         }
     }
 }
