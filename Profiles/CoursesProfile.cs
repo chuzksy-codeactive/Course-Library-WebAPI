@@ -9,8 +9,12 @@ namespace Library.API.Profiles
     {
         public CoursesProfile ()
         {
+            // Used for GET actions
             CreateMap<Course, CourseDto> ();
-            CreateMap<CourseForCreationDto, Course>();
+
+            // Used for POST,PUT actions
+            CreateMap<CourseForCreationDto, Course> ();
+            CreateMap<CourseForUpdateDto, Course> ();
         }
     }
 }
