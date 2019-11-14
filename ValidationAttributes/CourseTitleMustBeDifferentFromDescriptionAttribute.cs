@@ -9,13 +9,13 @@ namespace Library.API.ValidationAttributes
         protected override ValidationResult IsValid (object value,
             ValidationContext validationContext)
         {
-            var course = (CourseForCreationDto) validationContext.ObjectInstance;
+            var course = (CourseForManipulationDto) validationContext.ObjectInstance;
 
             if (course.Title == course.Description)
             {
                 return new ValidationResult (
                     ErrorMessage,
-                    new [] { "CourseForCreationDto" }
+                    new [] { nameof (CourseForManipulationDto) }
                 );
             }
 

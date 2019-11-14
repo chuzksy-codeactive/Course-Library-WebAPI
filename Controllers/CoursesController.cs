@@ -75,8 +75,8 @@ namespace Library.API.Controllers
             return CreatedAtRoute ("GetCourseForAuthor", new { authorId, id = courseToReturn.Id }, courseToReturn);
         }
 
-        [HttpPost ("{courseId}")]
-        public ActionResult UpdateCourseForAuthor (Guid authorId, Guid courseId, CourseForUpdateDto course)
+        [HttpPut ("{courseId}")]
+        public IActionResult UpdateCourseForAuthor (Guid authorId, Guid courseId, CourseForUpdateDto course)
         {
             if (!_libraryRepository.AuthorExists (authorId))
             {
@@ -87,18 +87,29 @@ namespace Library.API.Controllers
 
             if (courseForAuthorFromRepo == null)
             {
-                return NotFound ();
+                var courseToAdd = _mapper.Map<Course> (course);
+                courseToAdd.Id = courseId;
+
+                _libraryRepository.AddCourse (authorId, courseToAdd);
+
+                _libraryRepository.Save ();
+
+                var courseToReturn = _mapper.Map<CourseDto> (courseToAdd);
+
+                return CreatedAtRoute ("GetCourseForAuthor",
+                    new { authorId, id = courseToReturn.Id },
+                    courseToReturn);
             }
 
             // map the entity to the courseForUpdateDto
             // apply the updated fields value to that Dto
             // map the courseForUpdateDto back to an entity
-            _mapper.Map(course, courseForAuthorFromRepo);
+            _mapper.Map (course, courseForAuthorFromRepo);
 
-            _libraryRepository.UpdateCourse(courseForAuthorFromRepo);
-            _libraryRepository.Save();
+            _libraryRepository.UpdateCourse (courseForAuthorFromRepo);
+            _libraryRepository.Save ();
 
-            return NoContent();
+            return NoContent ();
         }
     }
 }
