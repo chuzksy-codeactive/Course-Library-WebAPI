@@ -29,7 +29,7 @@ namespace Library.API.Controllers
             _mapper = mapper;
         }
 
-        [HttpGet(Name = "GetCoursesForAuthor")]
+        [HttpGet (Name = "GetCoursesForAuthor")]
         public ActionResult<IEnumerable<CourseDto>> GetCoursesForAuthor (Guid authorId)
         {
             if (!_libraryRepository.AuthorExists (authorId))
@@ -48,6 +48,7 @@ namespace Library.API.Controllers
         }
 
         [HttpGet ("{id}", Name = "GetCourseForAuthor")]
+        [ResponseCache (Duration = 120)]
         public ActionResult<CourseDto> GetCourseForAuthor (Guid authorId, Guid id)
         {
             if (!_libraryRepository.AuthorExists (authorId))
@@ -65,7 +66,7 @@ namespace Library.API.Controllers
             return Ok (_mapper.Map<CourseDto> (courseForAuthorFromRepo));
         }
 
-        [HttpPost(Name = "CreateCourseForAuthor")]
+        [HttpPost (Name = "CreateCourseForAuthor")]
         public ActionResult<CourseDto> CreateCourseForAuthor (Guid authorId, CourseForCreationDto course)
         {
             if (!_libraryRepository.AuthorExists (authorId))
@@ -168,25 +169,25 @@ namespace Library.API.Controllers
             return NoContent ();
         }
 
-        [HttpDelete("{courseId}")]
-        public ActionResult DeleteCourseForAuthor(Guid authorId, Guid courseId)
+        [HttpDelete ("{courseId}")]
+        public ActionResult DeleteCourseForAuthor (Guid authorId, Guid courseId)
         {
-            if (!_libraryRepository.AuthorExists(authorId))
+            if (!_libraryRepository.AuthorExists (authorId))
             {
-                return NotFound();
+                return NotFound ();
             }
 
-            var courseForAuthorFromRepo = _libraryRepository.GetCourse(authorId, courseId);
+            var courseForAuthorFromRepo = _libraryRepository.GetCourse (authorId, courseId);
 
             if (courseForAuthorFromRepo == null)
             {
-                return NotFound();
+                return NotFound ();
             }
 
-            _libraryRepository.DeleteCourse(courseForAuthorFromRepo);
-            _libraryRepository.Save();
+            _libraryRepository.DeleteCourse (courseForAuthorFromRepo);
+            _libraryRepository.Save ();
 
-            return NoContent();
+            return NoContent ();
         }
 
         public override ActionResult ValidationProblem (
