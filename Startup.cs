@@ -60,8 +60,9 @@ namespace Library.API
                     };
                 };
             });
+            // register PropertyMappingService
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
             services.AddAutoMapper (AppDomain.CurrentDomain.GetAssemblies ());
-
             services.AddScoped<ILibraryRepository, LibraryRepository> ();
 
             var connectionString = Configuration["connectionStrings:libraryDB"];
