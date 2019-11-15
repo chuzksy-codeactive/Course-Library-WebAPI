@@ -56,34 +56,24 @@ namespace Library.API.Controllers
 
             var authorsFromRepo = _libraryRepository.GetAuthors (authorsResourceParameters);
 
-            var previousPageLink = authorsFromRepo.HasPrevious ?
-                CreateAuthorsResourceUri (authorsResourceParameters, ResourceUriType.PreviousPage) :
-                null;
-
-            var nextPageLink = authorsFromRepo.HasNext ?
-                CreateAuthorsResourceUri (authorsResourceParameters, ResourceUriType.NextPage) :
-                null;
-
             var paginationMetadata = new
             {
                 totalCount = authorsFromRepo.TotalCount,
                 pageSize = authorsFromRepo.PageSize,
                 currentPage = authorsFromRepo.CurrentPage,
                 totalPages = authorsFromRepo.TotalPages,
-                previousPageLink,
-                nextPageLink
             };
 
             Response.Headers.Add ("X-Pagination", JsonSerializer.Serialize (paginationMetadata));
 
-            var links = CreateLinksForAuthors(authorsResourceParameters);
-            var shapedAuthors = _mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo).ShapeData(authorsResourceParameters.Fields);
-            
-            var shapedAuthorsWithLinks = shapedAuthors.Select(author =>
+            var links = CreateLinksForAuthors (authorsResourceParameters, authorsFromRepo.HasNext, authorsFromRepo.HasPrevious);
+            var shapedAuthors = _mapper.Map<IEnumerable<AuthorDto>> (authorsFromRepo).ShapeData (authorsResourceParameters.Fields);
+
+            var shapedAuthorsWithLinks = shapedAuthors.Select (author =>
             {
                 var authorAsDictionary = author as IDictionary<string, object>;
-                var authorLinks = CreateLinksForAuthor((Guid)authorAsDictionary["Id"], null);
-                authorAsDictionary.Add("links", authorLinks);
+                var authorLinks = CreateLinksForAuthor ((Guid) authorAsDictionary["Id"], null);
+                authorAsDictionary.Add ("links", authorLinks);
                 return authorAsDictionary;
             });
 
@@ -93,7 +83,7 @@ namespace Library.API.Controllers
                 links
             };
 
-            return Ok(linkedCollectionResource); 
+            return Ok (linkedCollectionResource);
         }
 
         [HttpGet ("{authorId}", Name = "GetAuthor")]
@@ -240,7 +230,7 @@ namespace Library.API.Controllers
             return links;
         }
 
-        private IEnumerable<LinkDto> CreateLinksForAuthors (AuthorsResourceParameters authorsResourceParameters)
+        private IEnumerable<LinkDto> CreateLinksForAuthors (AuthorsResourceParameters authorsResourceParameters, bool hasNext, bool hasPrevious)
         {
             var links = new List<LinkDto> ();
 
@@ -248,6 +238,19 @@ namespace Library.API.Controllers
             links.Add (
                 new LinkDto (CreateAuthorsResourceUri (
                     authorsResourceParameters, ResourceUriType.Current), "self", "GET"));
+            if (hasNext)
+            {
+                links.Add (
+                    new LinkDto (CreateAuthorsResourceUri (authorsResourceParameters, ResourceUriType.NextPage),
+                        "nextPage", "GET"));
+            }
+
+            if (hasPrevious)
+            {
+                links.Add (
+                    new LinkDto (CreateAuthorsResourceUri (authorsResourceParameters, ResourceUriType.PreviousPage),
+                        "previousPage", "GET"));
+            }
 
             return links;
         }
