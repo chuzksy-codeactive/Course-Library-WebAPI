@@ -18,12 +18,18 @@ namespace Library.API.Controllers
     public class AuthorsController : ControllerBase
     {
         private readonly ILibraryRepository _libraryRepository;
+        private readonly IPropertyMappingService _propertyMappingService;
         private readonly IMapper _mapper;
 
-        public AuthorsController (ILibraryRepository libraryRepository, IMapper mapper)
+        public AuthorsController (
+            ILibraryRepository libraryRepository, 
+            IPropertyMappingService propertyMappingService,
+            IMapper mapper)
         {
             _libraryRepository = libraryRepository ??
                 throw new ArgumentNullException (nameof (libraryRepository));
+            _propertyMappingService = propertyMappingService ?? 
+                throw new ArgumentNullException(nameof(propertyMappingService));
             _mapper = mapper ??
                 throw new ArgumentException (nameof (mapper));
         }
@@ -31,6 +37,12 @@ namespace Library.API.Controllers
         [HttpGet (Name = "GetAuthors")]
         public ActionResult<IEnumerable<AuthorDto>> GetAuthors ([FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
+                (authorsResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
+
             var authorsFromRepo = _libraryRepository.GetAuthors (authorsResourceParameters);
 
             var previousPageLink = authorsFromRepo.HasPrevious ?
