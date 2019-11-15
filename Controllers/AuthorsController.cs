@@ -111,7 +111,7 @@ namespace Library.API.Controllers
             return Ok (linkedResourceToReturn);
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateAuthor")]
         public ActionResult<AuthorDto> CreateAuthor (AuthorForCreationDto authorForCreationDto)
         {
             var authorEntity = _mapper.Map<Author> (authorForCreationDto);
