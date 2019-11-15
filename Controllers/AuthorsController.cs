@@ -19,17 +19,21 @@ namespace Library.API.Controllers
     {
         private readonly ILibraryRepository _libraryRepository;
         private readonly IPropertyMappingService _propertyMappingService;
+        private readonly IPropertyCheckerService _propertyCheckerService;
         private readonly IMapper _mapper;
 
         public AuthorsController (
             ILibraryRepository libraryRepository, 
             IPropertyMappingService propertyMappingService,
+            IPropertyCheckerService propertyCheckerService,
             IMapper mapper)
         {
             _libraryRepository = libraryRepository ??
                 throw new ArgumentNullException (nameof (libraryRepository));
             _propertyMappingService = propertyMappingService ?? 
-                throw new ArgumentNullException(nameof(propertyMappingService));
+                throw new ArgumentNullException (nameof(propertyMappingService));
+            _propertyCheckerService = propertyCheckerService ??
+                throw new ArgumentNullException (nameof(propertyCheckerService));
             _mapper = mapper ??
                 throw new ArgumentException (nameof (mapper));
         }
@@ -39,6 +43,11 @@ namespace Library.API.Controllers
         {
             if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>
                 (authorsResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<AuthorDto> (authorsResourceParameters.Fields))
             {
                 return BadRequest();
             }
@@ -76,6 +85,11 @@ namespace Library.API.Controllers
             if (authorFromRepo == null)
             {
                 return NotFound ();
+            }
+
+            if (!_propertyCheckerService.TypeHasProperties<AuthorDto> (fields))
+            {
+                return BadRequest();
             }
 
             return Ok (_mapper.Map<AuthorDto> (authorFromRepo).ShapeData(fields));
