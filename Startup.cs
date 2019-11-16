@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+
 using AutoMapper;
 
 using Library.API.DbContexts;
@@ -14,6 +15,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
+
 using Newtonsoft.Json.Serialization;
 
 namespace Library.API
@@ -30,62 +33,66 @@ namespace Library.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services)
         {
-            services.AddHttpCacheHeaders((expirationModelOptions) =>
-            {
-                expirationModelOptions.MaxAge = 60;
-                expirationModelOptions.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
-            },
-            (validationModelOptions) =>
-            {
-                validationModelOptions.MustRevalidate = true;
-            });
-            services.AddResponseCaching();
-            services.AddControllers (setupAction =>
-            {
-                setupAction.ReturnHttpNotAcceptable = true;
-                setupAction.CacheProfiles.Add("240SecondsCacheProfile", new CacheProfile() { Duration = 240 });
-            })
-            .AddNewtonsoftJson(setupAction =>
-             {
-                 setupAction.SerializerSettings.ContractResolver =
-                    new CamelCasePropertyNamesContractResolver();
-             })
-            .AddXmlDataContractSerializerFormatters ()
-            .ConfigureApiBehaviorOptions(setupAction =>
-            {
-                setupAction.InvalidModelStateResponseFactory = context =>
+            services.AddHttpCacheHeaders ((expirationModelOptions) =>
                 {
-                    var problemDetails = new ValidationProblemDetails(context.ModelState)
+                    expirationModelOptions.MaxAge = 60;
+                    expirationModelOptions.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+                },
+                (validationModelOptions) =>
+                {
+                    validationModelOptions.MustRevalidate = true;
+                });
+            services.AddResponseCaching ();
+            services.AddControllers (setupAction =>
+                {
+                    setupAction.ReturnHttpNotAcceptable = true;
+                    setupAction.CacheProfiles.Add ("240SecondsCacheProfile", new CacheProfile () { Duration = 240 });
+                })
+                .AddNewtonsoftJson (setupAction =>
+                {
+                    setupAction.SerializerSettings.ContractResolver =
+                        new CamelCasePropertyNamesContractResolver ();
+                })
+                .AddXmlDataContractSerializerFormatters ()
+                .ConfigureApiBehaviorOptions (setupAction =>
+                {
+                    setupAction.InvalidModelStateResponseFactory = context =>
                     {
-                        Title = "One or more model validation errors occurred.",
-                        Status = StatusCodes.Status422UnprocessableEntity,
-                        Detail = "See the errors property for details.",
-                        Instance = context.HttpContext.Request.Path
-                    };
+                        var problemDetails = new ValidationProblemDetails (context.ModelState)
+                        {
+                            Title = "One or more model validation errors occurred.",
+                            Status = StatusCodes.Status422UnprocessableEntity,
+                            Detail = "See the errors property for details.",
+                            Instance = context.HttpContext.Request.Path
+                        };
 
-                    problemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+                        problemDetails.Extensions.Add ("traceId", context.HttpContext.TraceIdentifier);
 
-                    return new UnprocessableEntityObjectResult(problemDetails)
-                    {
-                        ContentTypes = { "application/problem+json" }
+                        return new UnprocessableEntityObjectResult (problemDetails)
+                        {
+                            ContentTypes = { "application/problem+json" }
+                        };
                     };
-                };
+                });
+            services.AddSwaggerGen (c =>
+            {
+                c.SwaggerDoc ("v1", new OpenApiInfo { Title = "Course Library WebAPI", Version = "v1" });
             });
-            services.Configure<MvcOptions>(config =>
+            services.Configure<MvcOptions> (config =>
             {
                 var newtonsoftJsonOutputFormatter = config.OutputFormatters
-                      .OfType<NewtonsoftJsonOutputFormatter>()?.FirstOrDefault();
+                    .OfType<NewtonsoftJsonOutputFormatter> ()?.FirstOrDefault ();
 
                 if (newtonsoftJsonOutputFormatter != null)
                 {
-                    newtonsoftJsonOutputFormatter.SupportedMediaTypes.Add("application/vnd.marvin.hateoas+json");
+                    newtonsoftJsonOutputFormatter.SupportedMediaTypes.Add ("application/vnd.marvin.hateoas+json");
                 }
             });
             // register PropertyMappingService
-            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+            services.AddTransient<IPropertyMappingService, PropertyMappingService> ();
 
             // register PropertyCheckerService
-            services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
+            services.AddTransient<IPropertyCheckerService, PropertyCheckerService> ();
 
             services.AddAutoMapper (AppDomain.CurrentDomain.GetAssemblies ());
             services.AddScoped<ILibraryRepository, LibraryRepository> ();
@@ -117,8 +124,13 @@ namespace Library.API
             }
 
             // app.UseResponseCaching();
-            app.UseHttpCacheHeaders();
+            app.UseHttpCacheHeaders ();
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Course Library WebAPI");
+            });
             app.UseRouting ();
 
             app.UseAuthorization ();
