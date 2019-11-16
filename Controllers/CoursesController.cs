@@ -6,7 +6,7 @@ using AutoMapper;
 using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
-
+using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
@@ -18,6 +18,8 @@ namespace Library.API.Controllers
 {
     [ApiController]
     [Route ("api/authors/{authorId}/[controller]")]
+    [HttpCacheExpiration(CacheLocation = CacheLocation.Public)]
+    [HttpCacheValidation(MustRevalidate = true)]
     public class CoursesController : ControllerBase
     {
         private readonly ILibraryRepository _libraryRepository;
@@ -66,6 +68,8 @@ namespace Library.API.Controllers
         }
 
         [HttpPost (Name = "CreateCourseForAuthor")]
+        [HttpCacheExpiration(CacheLocation = CacheLocation.Public, MaxAge = 1000)]
+        [HttpCacheValidation(MustRevalidate = false)]
         public ActionResult<CourseDto> CreateCourseForAuthor (Guid authorId, CourseForCreationDto course)
         {
             if (!_libraryRepository.AuthorExists (authorId))

@@ -30,7 +30,15 @@ namespace Library.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices (IServiceCollection services)
         {
-            services.AddHttpCacheHeaders();
+            services.AddHttpCacheHeaders((expirationModelOptions) =>
+            {
+                expirationModelOptions.MaxAge = 60;
+                expirationModelOptions.CacheLocation = Marvin.Cache.Headers.CacheLocation.Private;
+            },
+            (validationModelOptions) =>
+            {
+                validationModelOptions.MustRevalidate = true;
+            });
             services.AddResponseCaching();
             services.AddControllers (setupAction =>
             {
@@ -49,7 +57,6 @@ namespace Library.API
                 {
                     var problemDetails = new ValidationProblemDetails(context.ModelState)
                     {
-                        Type = "https://courselibrary.com/modelvalidationproblem",
                         Title = "One or more model validation errors occurred.",
                         Status = StatusCodes.Status422UnprocessableEntity,
                         Detail = "See the errors property for details.",
@@ -109,8 +116,7 @@ namespace Library.API
                 });
             }
 
-            // app.UseHttpsRedirection ();
-            app.UseResponseCaching();
+            // app.UseResponseCaching();
             app.UseHttpCacheHeaders();
 
             app.UseRouting ();
